@@ -6,12 +6,19 @@ Docker create Django project
 ### Dockerfile
 ```Dockerfile
 FROM daocloud.io/python:3.6.2
-ENV PYTHONUNBUFFERED 1
+ADD requirements.txt /tmp/
+RUN pip install -r /tmp/requirements.txt -i http://mirrors.aliyun.com/pypi/simple/ --trusted-host mirrors.aliyun.com
 RUN mkdir /code
 WORKDIR /code
-ADD requirements.txt /code/
-RUN pip install -r requirements.txt -i http://mirrors.aliyun.com/pypi/simple/ --trusted-host mirrors.aliyun.com
-ADD . /code/
+COPY . /code
+COPY docker-entrypoint.sh docker-entrypoint.sh
+RUN chmod +x docker-entrypoint.sh
+EXPOSE 8010
+
+
+
+CMD /code/docker-entrypoint.sh
+
 ```
 
 ### docker-compose.yml
@@ -22,9 +29,9 @@ services:
   web:
     restart: always
     build: .
-    command: python3 manage.py runserver 0.0.0.0:8008
+    command: /code/manage.py runserver 0.0.0.0:8010
     ports:
-      - "8008:8008"
+      - "8010:8010"
     volumes:
       - .:/code
 ```
@@ -32,14 +39,21 @@ services:
 ### requirements.txt
 ```requirements.txt
 django==2.0
+gunicorn==19.7.1
 ```
 
+
+### docker-entrypoint.sh
+```docker-entrypoint.sh
+/code/manage.py syncdb --noinput
+/usr/local/bin/gunicorn djweb.wsgi:application -w 2 -b :8010
+```
 ### ls
 ```
 pwd
 ~/djweb
 ls
-Dockerfile docker-compose.yml requirements.txt
+Dockerfile docker-compose.yml requirements.txt docker-entrypoint.sh
 
 ```
 
@@ -56,3 +70,6 @@ Dockerfile         db.sqlite3         djweb              docker-compose.yml mana
 `docker-compose up --build`
 
 http://localhost:8008
+
+
+### 
