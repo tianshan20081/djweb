@@ -69,7 +69,7 @@ Dockerfile         db.sqlite3         djweb              docker-compose.yml mana
 ### docker-compose up --build
 `docker-compose up --build`
 
-http://localhost:8008
+http://localhost:8010
 
 
 ### 
